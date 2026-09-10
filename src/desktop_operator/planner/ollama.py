@@ -43,9 +43,15 @@ class OllamaPlanner:
             return {"available": False, "error": str(exc)}
 
     async def plan(self, instruction: str) -> list[Action]:
+        allowed_programs = ", ".join(self.settings.allowed_programs)
         payload = {
             "model": self.settings.ollama_model,
-            "prompt": f"{SYSTEM_PROMPT}\nUser request: {instruction}",
+            "prompt": (
+                f"{SYSTEM_PROMPT}\n"
+                f"Allowed launch_program values: {allowed_programs}. "
+                "Use these exact executable names.\n"
+                f"User request: {instruction}"
+            ),
             "stream": False,
             "format": "json",
             "options": {"temperature": self.settings.ollama_temperature},

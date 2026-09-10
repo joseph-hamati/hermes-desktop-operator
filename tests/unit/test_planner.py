@@ -30,7 +30,10 @@ async def test_malformed_model_output(settings, monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_valid_model_output(settings, monkeypatch) -> None:
+    captured = {}
+
     async def fake_post(self, url, json):  # noqa: ANN001
+        captured.update(json)
         payload = {"actions": [{"type": "launch_program", "program": "notepad.exe"}]}
         return httpx.Response(
             200,
@@ -42,3 +45,4 @@ async def test_valid_model_output(settings, monkeypatch) -> None:
     planner = OllamaPlanner(settings)
     actions = await planner.plan("open notepad")
     assert actions[0].type == "launch_program"
+    assert "Allowed launch_program values: notepad.exe" in captured["prompt"]
