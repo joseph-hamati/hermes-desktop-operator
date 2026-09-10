@@ -7,14 +7,14 @@ Hermes should treat the daemon as a local executor with a narrow contract.
 Install the included user plugin:
 
 ```powershell
-.\scripts\install_hermes_plugin.ps1
-notepad $env:USERPROFILE\.hermes\.env
+.\scripts\install_hermes_plugin.ps1 -ConfigureToken
 ```
 
-Add the same token used by the daemon:
+This copies the daemon URL and the existing local token from the project's `.env`
+into Hermes's `.env` without printing the token. The resulting settings are:
 
 ```text
-HERMES_OPERATOR_API_TOKEN=your-existing-local-token
+HERMES_OPERATOR_API_TOKEN=<same local token used by the daemon>
 HERMES_OPERATOR_URL=http://127.0.0.1:8765
 ```
 
