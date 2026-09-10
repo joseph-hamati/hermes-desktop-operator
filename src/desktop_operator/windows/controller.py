@@ -92,22 +92,27 @@ class WindowsController:
         expanded = os.path.expandvars(program)
         if Path(expanded).is_absolute():
             return expanded
-        discovered = shutil.which(expanded)
-        if discovered:
-            return discovered
+        candidates = [expanded]
+        if not Path(expanded).suffix:
+            candidates.append(f"{expanded}.exe")
+        for candidate in candidates:
+            discovered = shutil.which(candidate)
+            if discovered:
+                return discovered
 
         try:
             import winreg
 
-            key_path = rf"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{expanded}"
-            for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
-                try:
-                    with winreg.OpenKey(root, key_path) as key:
-                        registered, _ = winreg.QueryValueEx(key, None)
-                        if registered:
-                            return str(registered)
-                except FileNotFoundError:
-                    continue
+            for candidate in candidates:
+                key_path = rf"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{candidate}"
+                for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+                    try:
+                        with winreg.OpenKey(root, key_path) as key:
+                            registered, _ = winreg.QueryValueEx(key, None)
+                            if registered:
+                                return str(registered)
+                    except FileNotFoundError:
+                        continue
         except (ImportError, OSError):
             pass
         return expanded

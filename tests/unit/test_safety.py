@@ -12,6 +12,7 @@ from desktop_operator.safety.policy import SafetyError, SafetyPolicy
 def test_program_allowlist(settings) -> None:
     policy = SafetyPolicy(settings)
     policy.validate_action(LaunchProgramAction(type="launch_program", program="notepad.exe"), [])
+    policy.validate_action(LaunchProgramAction(type="launch_program", program="notepad"), [])
     with pytest.raises(SafetyError, match="allowlist"):
         policy.validate_action(
             LaunchProgramAction(type="launch_program", program="powershell.exe"),

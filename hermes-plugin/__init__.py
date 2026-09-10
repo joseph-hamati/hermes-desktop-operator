@@ -21,15 +21,17 @@ def register(ctx: Any) -> None:
         schema={
             "name": "desktop_operator",
             "description": (
-                "Execute a natural-language task on the local Windows desktop. "
-                "Use only when the user explicitly asks to control desktop applications."
+                "Pass the user's complete natural-language desktop request to the local Windows "
+                "operator and return its result. Do not translate the request into action syntax "
+                "or split one request across calls. Use only when the user explicitly asks to "
+                "control desktop applications."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "instruction": {
                         "type": "string",
-                        "description": "The desktop task to execute.",
+                        "description": "The user's complete desktop request, preserved as written.",
                     },
                     "wait_seconds": {
                         "type": "number",

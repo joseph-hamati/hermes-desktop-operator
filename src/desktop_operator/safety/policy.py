@@ -24,7 +24,11 @@ class SafetyPolicy:
     def validate_action(self, action: Action, approvals: list[str]) -> None:
         if isinstance(action, LaunchProgramAction):
             program = Path(action.program).name.lower()
-            if program not in self.settings.allowed_programs:
+            executable_name = program if program.endswith(".exe") else f"{program}.exe"
+            if (
+                program not in self.settings.allowed_programs
+                and executable_name not in self.settings.allowed_programs
+            ):
                 raise SafetyError(f"program '{program}' is not in the allowlist")
         if isinstance(action, CreateDirectoryAction | SaveTextFileAction | VerifyFileExistsAction):
             self._require_allowed_path(action.path)
