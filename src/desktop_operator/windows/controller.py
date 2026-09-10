@@ -80,7 +80,8 @@ class WindowsController:
         self.last_process_id: int | None = None
 
     async def launch_program(self, program: str, args: list[str]) -> dict[str, Any]:
-        proc = subprocess.Popen([program, *args], shell=False)
+        expanded_args = [os.path.expandvars(arg) for arg in args]
+        proc = subprocess.Popen([program, *expanded_args], shell=False)
         self.last_process_id = proc.pid
         return {"pid": proc.pid, "program": program}
 

@@ -1,12 +1,24 @@
 {
+  "approvals": ["overwrite_files"],
   "actions": [
-    {"type": "launch_program", "program": "notepad.exe", "timeout": 10},
-    {"type": "focus_window", "title_contains": "Untitled", "timeout": 10},
+    {
+      "type": "save_text_file",
+      "path": "%USERPROFILE%\\Desktop\\hermes-desktop-operator-demo.txt",
+      "content": "",
+      "overwrite": true,
+      "timeout": 5
+    },
+    {
+      "type": "launch_program",
+      "program": "notepad.exe",
+      "args": ["%USERPROFILE%\\Desktop\\hermes-desktop-operator-demo.txt"],
+      "timeout": 10
+    },
+    {"type": "focus_window", "title_contains": "hermes-desktop-operator-demo.txt", "timeout": 10},
+    {"type": "hotkey", "keys": ["ctrl", "a"], "timeout": 5},
     {"type": "type_text", "text": "My first desktop-agent test.", "timeout": 10},
     {"type": "hotkey", "keys": ["ctrl", "s"], "timeout": 5},
-    {"type": "focus_window", "title_contains": "Save As", "timeout": 10},
-    {"type": "type_text", "text": "%USERPROFILE%\\Desktop\\hermes-desktop-operator-demo.txt", "timeout": 10},
-    {"type": "press_key", "key": "enter", "timeout": 10},
+    {"type": "wait", "seconds": 1, "timeout": 2},
     {
       "type": "verify_file_exists",
       "path": "%USERPROFILE%\\Desktop\\hermes-desktop-operator-demo.txt",

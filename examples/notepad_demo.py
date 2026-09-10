@@ -10,6 +10,8 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
+DEMO_TEXT = "My first desktop-agent test."
+
 
 def demo_path() -> Path:
     return Path.home() / "Desktop" / f"hermes-desktop-operator-demo-{int(time.time())}.txt"
@@ -17,13 +19,18 @@ def demo_path() -> Path:
 
 def demo_actions(path: Path) -> list[dict[str, object]]:
     return [
-        {"type": "launch_program", "program": "notepad.exe", "timeout": 10},
-        {"type": "focus_window", "title_contains": "Untitled", "timeout": 10},
-        {"type": "type_text", "text": "My first desktop-agent test.", "timeout": 10},
+        {"type": "save_text_file", "path": str(path), "content": "", "timeout": 5},
+        {
+            "type": "launch_program",
+            "program": "notepad.exe",
+            "args": [str(path)],
+            "timeout": 10,
+        },
+        {"type": "focus_window", "title_contains": path.name, "timeout": 10},
+        {"type": "hotkey", "keys": ["ctrl", "a"], "timeout": 5},
+        {"type": "type_text", "text": DEMO_TEXT, "timeout": 10},
         {"type": "hotkey", "keys": ["ctrl", "s"], "timeout": 5},
-        {"type": "focus_window", "title_contains": "Save As", "timeout": 10},
-        {"type": "type_text", "text": str(path), "timeout": 10},
-        {"type": "press_key", "key": "enter", "timeout": 10},
+        {"type": "wait", "seconds": 1, "timeout": 2},
         {"type": "verify_file_exists", "path": str(path), "timeout": 10},
     ]
 
@@ -53,6 +60,9 @@ async def main() -> None:
             payload = task.json()
             if payload["status"] in {"succeeded", "failed", "cancelled"}:
                 print(json.dumps(payload, indent=2))
+                saved_text = path.read_text(encoding="utf-8") if path.exists() else None
+                if payload["status"] == "succeeded" and saved_text != DEMO_TEXT:
+                    raise RuntimeError(f"Notepad did not save the expected text to {path}")
                 return
             await asyncio.sleep(0.5)
     raise TimeoutError(f"demo did not finish within {args.timeout} seconds")
