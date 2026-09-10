@@ -29,9 +29,10 @@ Keep `run_daemon.ps1` running. Then ask Hermes:
 Use desktop_operator to open Notepad and type Hello from Hermes.
 ```
 
-Hermes receives three tools: `desktop_operator`, `desktop_task_status`, and
-`desktop_task_cancel`. The daemon still validates planned actions and enforces its
-program and filesystem allowlists.
+Hermes receives `desktop_browser_navigate`, `desktop_operator`,
+`desktop_task_status`, and `desktop_task_cancel`. Use `desktop_browser_navigate`
+for reliable Chrome address-bar navigation without local model planning. The daemon
+still validates every action and enforces its program and filesystem allowlists.
 
 ## Configuration
 

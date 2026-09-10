@@ -38,7 +38,15 @@ def request(method: str, path: str, payload: dict[str, Any] | None = None) -> di
 
 def submit_instruction(instruction: str, wait_seconds: float = 60) -> dict[str, Any]:
     created = request("POST", "/tasks", {"instruction": instruction})
-    task_id = created["task_id"]
+    return wait_for_task(created["task_id"], wait_seconds)
+
+
+def submit_actions(actions: list[dict[str, Any]], wait_seconds: float = 60) -> dict[str, Any]:
+    created = request("POST", "/tasks", {"actions": actions})
+    return wait_for_task(created["task_id"], wait_seconds)
+
+
+def wait_for_task(task_id: str, wait_seconds: float) -> dict[str, Any]:
     deadline = time.monotonic() + wait_seconds
 
     while time.monotonic() < deadline:
@@ -58,4 +66,3 @@ def get_task(task_id: str) -> dict[str, Any]:
 
 def cancel_task(task_id: str) -> dict[str, Any]:
     return request("POST", f"/tasks/{task_id}/cancel")
-

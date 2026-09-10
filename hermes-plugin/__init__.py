@@ -4,7 +4,7 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from .client import cancel_task, get_task, submit_instruction
+from .client import cancel_task, get_task, submit_actions, submit_instruction
 
 
 def _result(handler: Callable[[], dict[str, Any]]) -> str:
@@ -15,6 +15,52 @@ def _result(handler: Callable[[], dict[str, Any]]) -> str:
 
 
 def register(ctx: Any) -> None:
+    ctx.register_tool(
+        name="desktop_browser_navigate",
+        toolset="desktop_operator",
+        schema={
+            "name": "desktop_browser_navigate",
+            "description": (
+                "Reliably open Google Chrome's Default profile, focus the address bar, type text "
+                "or a URL, and optionally press Enter. This does not switch accounts or sign in."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Search text or URL to enter in Chrome's address bar.",
+                    },
+                    "press_enter": {
+                        "type": "boolean",
+                        "description": "Whether to submit the entered text.",
+                        "default": True,
+                    },
+                },
+                "required": ["text"],
+            },
+        },
+        handler=lambda params, **kwargs: _result(
+            lambda: submit_actions(
+                [
+                    {
+                        "type": "launch_program",
+                        "program": "chrome.exe",
+                        "args": ["--profile-directory=Default"],
+                        "timeout": 15,
+                    },
+                    {"type": "focus_window", "title_contains": "Chrome", "timeout": 15},
+                    {"type": "hotkey", "keys": ["ctrl", "l"], "timeout": 5},
+                    {"type": "type_text", "text": params["text"], "timeout": 10},
+                    *(
+                        [{"type": "press_key", "key": "enter", "timeout": 5}]
+                        if params.get("press_enter", True)
+                        else []
+                    ),
+                ]
+            )
+        ),
+    )
     ctx.register_tool(
         name="desktop_operator",
         toolset="desktop_operator",
