@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 import httpx
+from dotenv import load_dotenv
 
 
 def demo_path() -> Path:
@@ -28,6 +29,8 @@ def demo_actions(path: Path) -> list[dict[str, object]]:
 
 
 async def main() -> None:
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Run the Notepad guaranteed demo.")
     parser.add_argument("--url", default="http://127.0.0.1:8765")
     parser.add_argument(
