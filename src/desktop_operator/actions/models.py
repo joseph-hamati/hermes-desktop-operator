@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Any, Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
 
 
 class ActionResult(BaseModel):
@@ -89,6 +89,13 @@ class PressKeyAction(BaseAction):
 class HotkeyAction(BaseAction):
     type: Literal["hotkey"]
     keys: list[str] = Field(min_length=2, max_length=5)
+
+    @field_validator("keys")
+    @classmethod
+    def separate_key_names(cls, value: list[str]) -> list[str]:
+        if any("+" in key for key in value):
+            raise ValueError("hotkey keys must be separate names such as ['ctrl', 'l']")
+        return value
 
 
 class ScreenshotAction(BaseAction):

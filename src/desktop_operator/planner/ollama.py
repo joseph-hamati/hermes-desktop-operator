@@ -4,7 +4,7 @@ import json
 from typing import Any
 
 import httpx
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from desktop_operator.actions.models import Action
 from desktop_operator.config import Settings
@@ -19,10 +19,19 @@ Never invent successful results. The executor will run actions and observe resul
 Do not include destructive actions. File overwrites, purchases, messages, email, security settings,
 password changes, installs, financial systems, and authentication systems need explicit approval.
 Prefer UI Automation targets over fragile absolute coordinates.
+For wait use seconds. For click use target_name or both x and y.
+For inspect_ui use only title_contains. To focus a browser address bar use hotkey ctrl+l.
+Hotkey keys must be separate names, for example {"type":"hotkey","keys":["ctrl","l"]}.
+Type text after focusing a field, then use a separate press_key action for Enter.
 Ask for clarification by returning {"clarification_required":"..."} when required
 information is missing.
 Stop once the requested goal is complete.
 """
+
+
+class PlanResponse(BaseModel):
+    actions: list[Action] = Field(default_factory=list)
+    clarification_required: str | None = None
 
 
 class PlannerError(ValueError):
@@ -32,7 +41,6 @@ class PlannerError(ValueError):
 class OllamaPlanner:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self._adapter = TypeAdapter(list[Action])
 
     async def health(self) -> dict[str, Any]:
         try:
@@ -53,31 +61,44 @@ class OllamaPlanner:
                 f"User request: {instruction}"
             ),
             "stream": False,
-            "format": "json",
+            "format": PlanResponse.model_json_schema(),
             "options": {"temperature": self.settings.ollama_temperature},
         }
-        try:
-            async with httpx.AsyncClient(timeout=self.settings.ollama_timeout_seconds) as client:
-                response = await client.post(
-                    f"{self.settings.ollama_url}/api/generate",
-                    json=payload,
-                )
-                response.raise_for_status()
-        except httpx.HTTPError as exc:
-            raise PlannerError(f"Ollama unavailable: {exc}") from exc
+        parsed: PlanResponse | None = None
+        validation_error: Exception | None = None
+        for attempt in range(2):
+            try:
+                async with httpx.AsyncClient(
+                    timeout=self.settings.ollama_timeout_seconds
+                ) as client:
+                    response = await client.post(
+                        f"{self.settings.ollama_url}/api/generate",
+                        json=payload,
+                    )
+                    response.raise_for_status()
+            except httpx.HTTPError as exc:
+                raise PlannerError(f"Ollama unavailable: {exc}") from exc
 
-        try:
-            body = response.json()
-            raw = body.get("response", "")
-            parsed = json.loads(raw)
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:
-            raise PlannerError("Ollama returned malformed JSON") from exc
+            try:
+                body = response.json()
+                raw = body.get("response", "")
+                parsed = PlanResponse.model_validate_json(raw)
+                break
+            except (json.JSONDecodeError, TypeError, ValueError, ValidationError) as exc:
+                validation_error = exc
+                if attempt == 0:
+                    payload["prompt"] += (
+                        "\nYour previous response failed schema validation. Correct these errors "
+                        f"and return the full JSON again:\n{str(exc)[:2000]}"
+                    )
 
-        if "clarification_required" in parsed:
-            raise PlannerError(f"clarification required: {parsed['clarification_required']}")
-        if not isinstance(parsed, dict) or "actions" not in parsed:
-            raise PlannerError("Ollama output must contain an actions array")
-        try:
-            return self._adapter.validate_python(parsed["actions"])
-        except ValidationError as exc:
-            raise PlannerError(f"Ollama returned invalid actions: {exc}") from exc
+        if parsed is None:
+            raise PlannerError(
+                f"Ollama returned invalid actions after retry: {validation_error}"
+            ) from validation_error
+
+        if parsed.clarification_required:
+            raise PlannerError(f"clarification required: {parsed.clarification_required}")
+        if not parsed.actions:
+            raise PlannerError("Ollama output must contain a non-empty actions array")
+        return parsed.actions

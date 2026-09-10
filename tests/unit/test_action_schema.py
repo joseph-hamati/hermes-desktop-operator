@@ -35,3 +35,10 @@ def test_extra_parameters_are_rejected() -> None:
         TaskCreate.model_validate(
             {"actions": [{"type": "press_key", "key": "enter", "command": "bad"}]}
         )
+
+
+def test_hotkey_rejects_combined_key_names() -> None:
+    with pytest.raises(ValidationError):
+        TaskCreate.model_validate(
+            {"actions": [{"type": "hotkey", "keys": ["ctrl+l", "enter"]}]}
+        )

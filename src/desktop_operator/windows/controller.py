@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import platform
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Protocol
@@ -81,9 +82,35 @@ class WindowsController:
 
     async def launch_program(self, program: str, args: list[str]) -> dict[str, Any]:
         expanded_args = [os.path.expandvars(arg) for arg in args]
-        proc = subprocess.Popen([program, *expanded_args], shell=False)
+        executable = self._resolve_program(program)
+        proc = subprocess.Popen([executable, *expanded_args], shell=False)
         self.last_process_id = proc.pid
-        return {"pid": proc.pid, "program": program}
+        return {"pid": proc.pid, "program": program, "executable": executable}
+
+    @staticmethod
+    def _resolve_program(program: str) -> str:
+        expanded = os.path.expandvars(program)
+        if Path(expanded).is_absolute():
+            return expanded
+        discovered = shutil.which(expanded)
+        if discovered:
+            return discovered
+
+        try:
+            import winreg
+
+            key_path = rf"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{expanded}"
+            for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+                try:
+                    with winreg.OpenKey(root, key_path) as key:
+                        registered, _ = winreg.QueryValueEx(key, None)
+                        if registered:
+                            return str(registered)
+                except FileNotFoundError:
+                    continue
+        except (ImportError, OSError):
+            pass
+        return expanded
 
     async def focus_window(self, title_contains: str, timeout: float) -> dict[str, Any]:
         deadline = asyncio.get_running_loop().time() + timeout
