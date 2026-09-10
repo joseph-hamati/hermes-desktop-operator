@@ -2,6 +2,36 @@
 
 Hermes should treat the daemon as a local executor with a narrow contract.
 
+## Connect Hermes Agent
+
+Install the included user plugin:
+
+```powershell
+.\scripts\install_hermes_plugin.ps1
+notepad $env:USERPROFILE\.hermes\.env
+```
+
+Add the same token used by the daemon:
+
+```text
+HERMES_OPERATOR_API_TOKEN=your-existing-local-token
+HERMES_OPERATOR_URL=http://127.0.0.1:8765
+```
+
+In Hermes Desktop, open **Capabilities > Plugins**, enable
+`hermes-desktop-operator`, and restart Hermes. Current Hermes Agent versions keep
+third-party plugins disabled until the user explicitly enables them.
+
+Keep `run_daemon.ps1` running. Then ask Hermes:
+
+```text
+Use desktop_operator to open Notepad and type Hello from Hermes.
+```
+
+Hermes receives three tools: `desktop_operator`, `desktop_task_status`, and
+`desktop_task_cancel`. The daemon still validates planned actions and enforces its
+program and filesystem allowlists.
+
 ## Configuration
 
 Daemon URL:

@@ -1,0 +1,6 @@
+name: hermes-desktop-operator
+version: "1.0.0"
+description: Safely control the local Windows desktop through Hermes Desktop Operator.
+requires_env:
+  - HERMES_OPERATOR_API_TOKEN
+

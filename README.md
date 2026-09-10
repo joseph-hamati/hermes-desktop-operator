@@ -154,7 +154,18 @@ Check `/health` for the hotkey registration status.
 
 ## Hermes Integration
 
-Hermes can call the service over localhost HTTP:
+Install the included Hermes Agent plugin:
+
+```powershell
+.\scripts\install_hermes_plugin.ps1
+notepad $env:USERPROFILE\.hermes\.env
+```
+
+Add the same `HERMES_OPERATOR_API_TOKEN` used by the daemon, enable
+`hermes-desktop-operator` under Hermes Desktop's **Capabilities > Plugins**, and
+restart Hermes. Keep the daemon running while Hermes uses the tool.
+
+Hermes can also call the service directly over localhost HTTP:
 
 ```python
 from desktop_operator.hermes.client import HermesDesktopClient
