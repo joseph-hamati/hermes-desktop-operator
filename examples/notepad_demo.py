@@ -5,22 +5,25 @@ import asyncio
 import json
 import os
 import time
+from pathlib import Path
 
 import httpx
 
-DEMO_PATH = r"%USERPROFILE%\Desktop\hermes-desktop-operator-demo.txt"
+
+def demo_path() -> Path:
+    return Path.home() / "Desktop" / f"hermes-desktop-operator-demo-{int(time.time())}.txt"
 
 
-def demo_actions() -> list[dict[str, object]]:
+def demo_actions(path: Path) -> list[dict[str, object]]:
     return [
         {"type": "launch_program", "program": "notepad.exe", "timeout": 10},
-        {"type": "focus_window", "title_contains": "Notepad", "timeout": 10},
+        {"type": "focus_window", "title_contains": "Untitled", "timeout": 10},
         {"type": "type_text", "text": "My first desktop-agent test.", "timeout": 10},
         {"type": "hotkey", "keys": ["ctrl", "s"], "timeout": 5},
-        {"type": "type_text", "text": DEMO_PATH, "timeout": 10},
+        {"type": "type_text", "text": str(path), "timeout": 10},
         {"type": "press_key", "key": "enter", "timeout": 10},
         {"type": "wait", "seconds": 1, "timeout": 2},
-        {"type": "verify_file_exists", "path": DEMO_PATH, "timeout": 5},
+        {"type": "verify_file_exists", "path": str(path), "timeout": 5},
     ]
 
 
@@ -34,9 +37,10 @@ async def main() -> None:
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
 
+    path = demo_path()
     headers = {"Authorization": f"Bearer {args.token}"}
     async with httpx.AsyncClient(timeout=10, headers=headers) as client:
-        created = await client.post(f"{args.url}/tasks", json={"actions": demo_actions()})
+        created = await client.post(f"{args.url}/tasks", json={"actions": demo_actions(path)})
         created.raise_for_status()
         task_id = created.json()["task_id"]
         deadline = time.monotonic() + args.timeout

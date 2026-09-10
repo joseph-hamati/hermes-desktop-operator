@@ -64,10 +64,10 @@ With the daemon running:
 .\scripts\run_demo.ps1
 ```
 
-The demo opens Notepad, types `My first desktop-agent test.`, saves it to:
+The demo opens Notepad, types `My first desktop-agent test.`, saves it to a unique Desktop file such as:
 
 ```text
-%USERPROFILE%\Desktop\hermes-desktop-operator-demo.txt
+%USERPROFILE%\Desktop\hermes-desktop-operator-demo-1789040000.txt
 ```
 
 Then it verifies the file exists and prints the structured task result. It also writes an audit log to `audit/audit.jsonl`.

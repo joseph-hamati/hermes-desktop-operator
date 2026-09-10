@@ -77,9 +77,11 @@ class WindowsController:
         self.pyautogui = pyautogui
         self.desktop = Desktop(backend="uia")
         self.pyautogui.FAILSAFE = True
+        self.last_process_id: int | None = None
 
     async def launch_program(self, program: str, args: list[str]) -> dict[str, Any]:
         proc = subprocess.Popen([program, *args], shell=False)
+        self.last_process_id = proc.pid
         return {"pid": proc.pid, "program": program}
 
     async def focus_window(self, title_contains: str, timeout: float) -> dict[str, Any]:
@@ -88,10 +90,21 @@ class WindowsController:
         while asyncio.get_running_loop().time() < deadline:
             windows = self.desktop.windows(title_re=f".*{title_contains}.*", visible_only=True)
             if windows:
-                windows[0].set_focus()
-                return {"title": windows[0].window_text()}
+                selected = self._select_window(windows)
+                selected.set_focus()
+                return {"title": selected.window_text(), "process_id": selected.process_id()}
             await asyncio.sleep(0.25)
         raise TimeoutError(last_error)
+
+    def _select_window(self, windows: list[Any]) -> Any:
+        if self.last_process_id:
+            for window in windows:
+                if window.process_id() == self.last_process_id:
+                    return window
+        for window in windows:
+            if window.window_text().lower().startswith("untitled"):
+                return window
+        return windows[-1]
 
     async def wait(self, seconds: float) -> dict[str, Any]:
         await asyncio.sleep(seconds)
@@ -111,8 +124,16 @@ class WindowsController:
         return {"fragile_coordinates": True, "x": action.x, "y": action.y, "clicks": clicks}
 
     async def type_text(self, action: TypeTextAction) -> dict[str, Any]:
-        self.pyautogui.write(action.text, interval=action.interval)
-        return {"characters": len(action.text)}
+        try:
+            import pyperclip  # type: ignore[import-not-found]
+
+            pyperclip.copy(action.text)
+            self.pyautogui.hotkey("ctrl", "v")
+            method = "clipboard_paste"
+        except Exception:
+            self.pyautogui.write(action.text, interval=action.interval)
+            method = "keyboard_write"
+        return {"characters": len(action.text), "method": method}
 
     async def press_key(self, action: PressKeyAction) -> dict[str, Any]:
         self.pyautogui.press(action.key)
