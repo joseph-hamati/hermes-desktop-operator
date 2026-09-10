@@ -21,10 +21,10 @@ def demo_actions(path: Path) -> list[dict[str, object]]:
         {"type": "focus_window", "title_contains": "Untitled", "timeout": 10},
         {"type": "type_text", "text": "My first desktop-agent test.", "timeout": 10},
         {"type": "hotkey", "keys": ["ctrl", "s"], "timeout": 5},
+        {"type": "focus_window", "title_contains": "Save As", "timeout": 10},
         {"type": "type_text", "text": str(path), "timeout": 10},
         {"type": "press_key", "key": "enter", "timeout": 10},
-        {"type": "wait", "seconds": 1, "timeout": 2},
-        {"type": "verify_file_exists", "path": str(path), "timeout": 5},
+        {"type": "verify_file_exists", "path": str(path), "timeout": 10},
     ]
 
 

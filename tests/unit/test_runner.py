@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from desktop_operator.actions.models import WaitAction
+from desktop_operator.actions.models import VerifyFileExistsAction, WaitAction
 from desktop_operator.actions.task import TaskCreate
 from desktop_operator.executor.runner import TaskRunner
 from desktop_operator.logging.audit import AuditLogger
@@ -69,3 +69,28 @@ async def test_cancellation(settings, tmp_path) -> None:
     saved = store.load(task.id)
     assert saved is not None
     assert saved.status == "cancelled"
+
+
+@pytest.mark.asyncio
+async def test_verify_file_exists_waits_for_delayed_file(settings, tmp_path) -> None:
+    runner = TaskRunner(
+        settings,
+        JsonTaskStore(tmp_path / "tasks"),
+        AuditLogger(tmp_path / "audit.jsonl"),
+        DryRunController(),
+    )
+    target = tmp_path / "delayed.txt"
+
+    async def create_file() -> None:
+        await asyncio.sleep(0.1)
+        target.write_text("ready", encoding="utf-8")
+
+    create_task = asyncio.create_task(create_file())
+    result = await runner._execute_one(
+        VerifyFileExistsAction(type="verify_file_exists", path=target, timeout=1),
+        DryRunController(),
+        False,
+    )
+    await create_task
+
+    assert result == {"path": str(target), "exists": True}

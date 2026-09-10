@@ -213,10 +213,13 @@ class TaskRunner:
         if isinstance(action, InspectUIAction):
             return await controller.inspect_ui(action.title_contains)
         if isinstance(action, VerifyFileExistsAction):
-            exists = Path(os.path.expandvars(str(action.path))).expanduser().exists()
-            if not exists:
-                raise FileNotFoundError(f"file does not exist: {action.path}")
-            return {"path": str(action.path), "exists": True}
+            target = Path(os.path.expandvars(str(action.path))).expanduser()
+            deadline = asyncio.get_running_loop().time() + action.timeout
+            while asyncio.get_running_loop().time() < deadline:
+                if target.exists():
+                    return {"path": str(action.path), "exists": True}
+                await asyncio.sleep(0.1)
+            raise FileNotFoundError(f"file does not exist: {action.path}")
         if isinstance(action, CreateDirectoryAction):
             if not dry_run:
                 Path(action.path).mkdir(parents=True, exist_ok=True)
