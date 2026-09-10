@@ -160,9 +160,10 @@ Install the included Hermes Agent plugin:
 .\scripts\install_hermes_plugin.ps1 -ConfigureToken
 ```
 
-The installer copies the same `HERMES_OPERATOR_API_TOKEN` used by the daemon into
-Hermes's local environment without printing it. Enable `hermes-desktop-operator`
-under Hermes Desktop's **Capabilities > Plugins**, and restart Hermes. Keep the
+The installer detects Hermes's active Windows profile and copies the same
+`HERMES_OPERATOR_API_TOKEN` used by the daemon into Hermes's local environment
+without printing it. Enable `hermes-desktop-operator` with
+`hermes plugins enable hermes-desktop-operator`, then restart Hermes. Keep the
 daemon running while Hermes uses the tool.
 
 Hermes can also call the service directly over localhost HTTP:

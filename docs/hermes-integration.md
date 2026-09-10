@@ -10,8 +10,9 @@ Install the included user plugin:
 .\scripts\install_hermes_plugin.ps1 -ConfigureToken
 ```
 
-This copies the daemon URL and the existing local token from the project's `.env`
-into Hermes's `.env` without printing the token. The resulting settings are:
+This detects Hermes's active Windows profile, then copies the daemon URL and the
+existing local token from the project's `.env` into Hermes's `.env` without
+printing the token. The resulting settings are:
 
 ```text
 HERMES_OPERATOR_API_TOKEN=<same local token used by the daemon>

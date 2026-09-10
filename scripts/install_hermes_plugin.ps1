@@ -6,7 +6,14 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $source = Join-Path $PSScriptRoot "..\hermes-plugin"
-$target = Join-Path $env:USERPROFILE ".hermes\plugins\hermes-desktop-operator"
+$localHermesHome = Join-Path $env:LOCALAPPDATA "hermes"
+$legacyHermesHome = Join-Path $env:USERPROFILE ".hermes"
+$hermesHome = if (Test-Path -LiteralPath $localHermesHome) {
+    $localHermesHome
+} else {
+    $legacyHermesHome
+}
+$target = Join-Path $hermesHome "plugins\hermes-desktop-operator"
 
 if (-not (Test-Path -LiteralPath $source)) {
     throw "Hermes plugin source not found: $source"
@@ -21,7 +28,7 @@ Write-Host "Installed Hermes plugin to $target"
 
 if ($ConfigureToken) {
     $operatorEnv = Join-Path $PSScriptRoot "..\.env"
-    $hermesEnv = Join-Path $env:USERPROFILE ".hermes\.env"
+    $hermesEnv = Join-Path $hermesHome ".env"
     $tokenLine = Get-Content -LiteralPath $operatorEnv |
         Where-Object { $_ -match '^HERMES_OPERATOR_API_TOKEN=' } |
         Select-Object -First 1
@@ -42,7 +49,7 @@ if ($ConfigureToken) {
     [System.IO.File]::WriteAllLines($hermesEnv, [string[]]$updated, $utf8NoBom)
     Write-Host "Configured the daemon URL and token in $hermesEnv"
 } else {
-    Write-Host "Next: add HERMES_OPERATOR_API_TOKEN to $env:USERPROFILE\.hermes\.env"
+    Write-Host "Next: add HERMES_OPERATOR_API_TOKEN to $hermesHome\.env"
 }
 
 Write-Host "Then enable hermes-desktop-operator in Hermes Plugins and restart Hermes."
