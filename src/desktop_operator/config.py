@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 def _split_csv(value: str | list[str]) -> list[str]:
@@ -30,8 +30,10 @@ class Settings(BaseSettings):
     data_dir: Path = Field(default=Path("./data"))
     log_dir: Path = Field(default=Path("./logs"))
     audit_log: Path = Field(default=Path("./audit/audit.jsonl"))
-    allowed_programs: list[str] = Field(default_factory=lambda: ["notepad.exe", "calc.exe"])
-    allowed_directories: list[Path] = Field(
+    allowed_programs: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["notepad.exe", "calc.exe"]
+    )
+    allowed_directories: Annotated[list[Path], NoDecode] = Field(
         default_factory=lambda: [Path(os.path.expandvars(r"%USERPROFILE%\Desktop"))]
     )
     ollama_url: str = Field(default="http://127.0.0.1:11434")

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from desktop_operator.actions.models import LaunchProgramAction, SaveTextFileAction
+from desktop_operator.config import Settings
 from desktop_operator.safety.policy import SafetyError, SafetyPolicy
 
 
@@ -42,3 +43,11 @@ def test_overwrite_requires_approval(settings, tmp_path: Path) -> None:
     with pytest.raises(SafetyError, match="approval"):
         policy.validate_action(action, [])
     policy.validate_action(action, ["overwrite_files"])
+
+
+def test_csv_allowlist_env_parsing(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("HERMES_OPERATOR_ALLOWED_PROGRAMS", "notepad.exe,calc.exe")
+    monkeypatch.setenv("HERMES_OPERATOR_ALLOWED_DIRECTORIES", str(tmp_path))
+    parsed = Settings()
+    assert parsed.allowed_programs == ["notepad.exe", "calc.exe"]
+    assert parsed.allowed_directories == [tmp_path]
