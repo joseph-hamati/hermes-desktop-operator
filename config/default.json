@@ -1,0 +1,7 @@
+{
+  "allowed_programs": ["notepad.exe", "calc.exe"],
+  "allowed_directories": ["%USERPROFILE%\\Desktop"],
+  "dry_run": false,
+  "global_task_timeout_seconds": 300,
+  "action_timeout_seconds": 30
+}

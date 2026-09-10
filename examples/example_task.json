@@ -1,0 +1,15 @@
+{
+  "actions": [
+    {"type": "launch_program", "program": "notepad.exe", "timeout": 10},
+    {"type": "focus_window", "title_contains": "Notepad", "timeout": 10},
+    {"type": "type_text", "text": "My first desktop-agent test.", "timeout": 10},
+    {"type": "hotkey", "keys": ["ctrl", "s"], "timeout": 5},
+    {"type": "type_text", "text": "%USERPROFILE%\\Desktop\\hermes-desktop-operator-demo.txt", "timeout": 10},
+    {"type": "press_key", "key": "enter", "timeout": 10},
+    {
+      "type": "verify_file_exists",
+      "path": "%USERPROFILE%\\Desktop\\hermes-desktop-operator-demo.txt",
+      "timeout": 5
+    }
+  ]
+}
