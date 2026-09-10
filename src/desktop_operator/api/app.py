@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi.responses import RedirectResponse
 
 from desktop_operator.actions.models import Action
 from desktop_operator.actions.task import TaskCreate, TaskSnapshot
@@ -56,6 +57,10 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    @app.get("/", include_in_schema=False)
+    async def home() -> RedirectResponse:
+        return RedirectResponse(url="/docs")
 
     @app.get("/health")
     async def health() -> dict[str, object]:

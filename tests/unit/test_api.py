@@ -42,6 +42,16 @@ def test_api_auth_required(tmp_path) -> None:
     assert response.status_code == 401
 
 
+def test_home_redirects_to_api_docs(tmp_path) -> None:
+    configure_state(tmp_path)
+    client = TestClient(create_app(), follow_redirects=False)
+
+    response = client.get("/")
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/docs"
+
+
 def test_api_task_lifecycle(tmp_path) -> None:
     configure_state(tmp_path)
     client = TestClient(create_app())
